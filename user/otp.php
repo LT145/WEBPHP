@@ -1,6 +1,14 @@
 <?php
-// Lấy email từ URL
+session_start(); // Bắt đầu session
+
+// Lấy email từ URL nếu có
 $email = isset($_GET['email']) ? $_GET['email'] : '';
+
+// Lấy thời gian OTP và tính thời gian còn lại
+$otp_time = $_SESSION["otp_time"] ?? time(); // Lấy thời gian OTP từ session (nếu có), nếu không lấy thời gian hiện tại
+$current_time = time();
+$otp_expiry_time = 300; // 5 phút cho OTP
+$remaining_time = $otp_expiry_time - ($current_time - $otp_time); // Thời gian còn lại cho OTP
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -9,88 +17,121 @@ $email = isset($_GET['email']) ? $_GET['email'] : '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xác Nhận OTP</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="user.css">
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+    </style>
 </head>
-<body>
-<header class="header">
-    <div class="logo">
-        <a href="../index.php">
-            <img src="../img/logo/logo.png" alt="">
-        </a>
-    </div>
-    <div class="navbar-flex">
-        <li class="nav-item active mx-5">
-            <a class="nav-link" href="../index.php">Trang Chủ</a>
-        </li>
-        <li class="nav-item mx-5">
-            <a class="nav-link" href="/category/index.php">Danh Mục</a>
-        </li>
-        <li class="nav-item mx-5">
-            <a class="nav-link" href="login.php">Đăng Nhập</a>
-        </li>
-    </div>
-</header>
-
-<main>
-    <div class="otp-container">
-        <h2>Nhập Mã OTP Gửi Đến Email</h2>
-        <p>Email bạn đã đăng ký: <strong><?php echo htmlspecialchars($email); ?></strong></p>
-
-        <form action="verify_otp.php" method="POST">
-            <label for="otp">Mã OTP:</label>
-            <input type="text" id="otp" name="otp" required>
-
-            <button type="submit" class="btn-verify">Xác Nhận OTP</button>
-        </form>
-        <div class="login-lable">
-            <a href="register.php">Quay lại đăng ký</a>
+<body class="bg-gray-100 font-roboto">
+    <header class="bg-black text-white py-4">
+        <div class="container mx-auto px-5 flex justify-between items-center">
+            <div class="logo">
+                <a href="../index.php">
+                    <img src="../img/logo/logo.png" alt="" class="w-20 invert">
+                </a>
+            </div>
+            <nav class="navbar-flex space-x-5">
+                <a href="../index.php" class="hover:text-gray-300">Trang Chủ</a>
+                <a href="/category/index.php" class="hover:text-gray-300">Danh Mục</a>
+                <a href="login.php" class="hover:text-gray-300">Đăng Nhập</a>
+            </nav>
         </div>
-    </div>
-</main>
+    </header>
+
+    <main class="container mx-auto px-10 py-10">
+        <div class="otp-container max-w-md mx-auto bg-white p-8 rounded-md shadow-lg overflow-hidden border border-gray-200"> 
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Nhập Mã OTP Gửi Đến Email</h2> 
+            <p class="text-gray-700 mb-4">Email bạn đã đăng ký: <strong class="font-medium"><?php echo htmlspecialchars($email); ?></strong></p>
+            <p class="text-gray-700 mb-4">Thời gian còn lại để nhập OTP: <strong id="countdown"><?= gmdate("i:s", $remaining_time) ?></strong></p>
+
+            <form method="POST"> 
+                <div class="mb-4">
+                    <label for="otp" class="block text-gray-700 font-medium mb-2">Mã OTP:</label>
+                    <input type="text" id="otp" name="otp" 
+                        class="border border-gray-400 px-3 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        required pattern="[0-9]{6}" maxlength="6"> 
+                    <span class="error-message text-red-500 text-sm"></span> 
+                </div>
+                <button type="submit" class="bg-black hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-md w-full transition duration-300">Xác Nhận OTP</button>
+            </form>
+            <div class="mt-6 text-center text-gray-600">
+                <a href="register.php" class="hover:text-gray-900">Quay lại đăng ký</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Khởi tạo thời gian còn lại (tính từ PHP)
+        let remainingTime = <?= $remaining_time ?>;
+        const countdownElement = document.getElementById('countdown');
+
+        // Cập nhật đếm ngược mỗi giây
+        const countdownInterval = setInterval(function() {
+            if (remainingTime > 0) {
+                remainingTime--; // Giảm thời gian
+                countdownElement.textContent = new Date(remainingTime * 1000).toISOString().substr(14, 5); // Hiển thị lại thời gian
+            } else {
+                countdownElement.textContent = '00:00'; // Nếu hết thời gian
+                clearInterval(countdownInterval); // Dừng đếm ngược
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
 <?php
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED); 
+ini_set('display_errors', 0); // Tắt hiển thị lỗi trên trình duyệt
+// Nếu form đã được submit
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Lấy OTP từ form
+    $otp_entered = $_POST["otp"];
+    $email = $_SESSION["email"]; // Lấy email từ session
 
-// Include Composer autoloader
-require __DIR__ . '/../vendor/autoload.php';
+    // Kiểm tra OTP
+    if ($otp_entered == $_SESSION["otp"]) {
+        // OTP đúng, tiến hành lưu thông tin người dùng vào CSDL
+        // Lấy các thông tin từ session
+$username = $_SESSION["username"];
+$email = $_SESSION["email"];
+$password = $_SESSION["password"];
+$full_name = $_SESSION["full_name"];  // Lấy full_name từ session
 
-
-// Tạo mã OTP ngẫu nhiên
-$otp = rand(100000, 999999);
-
-// Lấy email từ URL
-$email = isset($_GET['email']) ? $_GET['email'] : '';
-
-// Tạo một đối tượng PHPMailer
-$mail = new PHPMailer(true);
+// Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
 try {
-    // Cấu hình server SMTP
-    $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com'; // Dùng server SMTP của Gmail
-    $mail->SMTPAuth = true;
-    $mail->Username = 'loc42286@gmail.com'; // Thay bằng email của bạn
-    $mail->Password = 'yqjskovckgzsywem';  // Thay bằng mật khẩu email của bạn
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port = 587;
-    $mail->CharSet = 'UTF-8';
+    include '../asset/connect.php'; // Kết nối đến CSDL
 
+    // Lưu thông tin người dùng vào CSDL (thêm full_name)
+    $stmt = $conn->prepare("INSERT INTO user (username, email, password, fullname) VALUES (:username, :email, :password, :fullname)");
+    $stmt->bindParam(':username', $username);
+    $stmt->bindParam(':email', $email);
+    $stmt->bindParam(':password', $hashedPassword);
+    $stmt->bindParam(':fullname', $full_name);  // Thêm bindParam cho full_name
+    $stmt->execute();
 
-    // Người gửi và người nhận
-    $mail->setFrom('loc42286@gmail.com', 'DOANPHP');  // Thay bằng email và tên của bạn
-    $mail->addAddress($email); // Thêm người nhận (email đã nhập)
+    // Thông báo thành công
+    echo "Đăng ký thành công!";
 
-    // Nội dung email
-    $mail->isHTML(true);
-    $mail->Subject = 'Mã OTP Xác Nhận';
-    $mail->Body    = 'Mã OTP của bạn là: <strong>' . $otp . '</strong>';
+    // Xóa session OTP và thông tin người dùng
+    unset($_SESSION["otp"]);
+    unset($_SESSION["username"]);
+    unset($_SESSION["email"]);
+    unset($_SESSION["password"]);
+    unset($_SESSION["full_name"]);  // Xóa full_name khỏi session
 
-    // Gửi email
-    $mail->send();
-    echo 'OTP đã được gửi đến email của bạn.';
-} catch (Exception $e) {
-    echo "Không thể gửi OTP. Lỗi: {$mail->ErrorInfo}";
+    // Chuyển hướng đến trang đăng nhập
+    header("Location: login.php");
+    exit();
+} catch(PDOException $e) {
+    echo "Lỗi: " . $e->getMessage();
 }
+
+$conn = null; // Đóng kết nối
+
+    } else {
+        echo "Mã OTP không chính xác!";
+    }
+}
+
 ?>
