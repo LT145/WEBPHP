@@ -15,52 +15,9 @@ include './asset/connect.php';
     </style>
 </head>
 <body>
-<header class="bg-black text-white py-4">
-    <div class="container mx-auto px-5 flex justify-between items-center">
-        <!-- Logo -->
-        <div class="logo">
-            <a href="../index.php">
-                <img src="../img/logo/logo.png" alt="" class="w-20 invert">
-            </a>
-        </div>
-
-        <!-- Navigation -->
-        <nav class="flex flex-row items-center space-x-5">
-            <a href="../index.php" class="hover:text-gray-300">Trang Chủ</a>
-            <a href="/category/index.php" class="hover:text-gray-300">Danh Mục</a>
-
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <!-- Nếu người dùng đã đăng nhập -->
-                <?php 
-                    // Lấy tên người dùng (chỉ lấy phần cuối của full name)
-                    $fullName = $_SESSION['first_name'];  
-                ?>
-                <div class="relative group">
-                    <!-- Hiển thị tên người dùng -->
-                    <a href="profile.php" class="hover:text-gray-300">Xin chào, <?= htmlspecialchars($fullName) ?></a>
-
-                    <!-- Menu con hiển thị khi hover -->
-                    <div class="absolute left-0 top-[-2px] hidden group-hover:block bg-white shadow-lg p-3 rounded-md mt-2 w-40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-in-out">
-                        <a href="profile.php" class="block text-gray-700 mb-2 hover:text-blue-500">
-                            <i class="fas fa-user mr-2"></i> Thông tin
-                        </a>
-                        <a href="logout.php" class="block text-gray-700 hover:text-red-500">
-                            <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
-                        </a>
-                    </div>
-                </div>
-            <?php else: ?>
-                <!-- Nếu chưa đăng nhập -->
-                <a href="./user/login.php" class="hover:text-gray-300">Đăng Nhập</a>
-            <?php endif; ?>
-        </nav>
-    </div>
-</header>
-
-
-
-
-
+<?php
+include('./component/header.php'); // Điều chỉnh đường dẫn đến header.php
+?>
 
  <main class="container mx-auto px-5 py-10">
         <div class="page-inner text-center">
@@ -85,7 +42,6 @@ include './asset/connect.php';
                         } else {
                             echo "Không có kết quả";
                         }
-                        $conn->close();
                         ?>
                     </div>
                     <button class="prev-btn absolute top-1/2 left-5 transform -translate-y-1/2 bg-black/50 text-white border-none px-5 py-3 cursor-pointer rounded-md hover:bg-black/80" onclick="prevSlide()">❮</button>

@@ -13,7 +13,9 @@ $errors = [
     'email' => '',
     'password' => '',
     'confirm_password' => '',
-    'full_name' => '' // Thêm trường full_name vào mảng lỗi
+    'full_name' => '', // Thêm trường full_name vào mảng lỗi
+    'dob' => '',
+    'gender' => ''
 ];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -22,14 +24,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST["password"]);
     $confirm_password = trim($_POST["confirm_password"]);
     $full_name = trim($_POST["full_name"]);  // Lấy họ và tên từ form
+    $dob = trim($_POST["dob"]);  // Lấy ngày sinh từ form
+    $gender = trim($_POST["gender"]);  // Lấy giới tính từ form
+
 
     // Kiểm tra trường "Họ và Tên" (Không có số và ký tự đặc biệt)
-// Kiểm tra trường "Họ và Tên" (Không có số và ký tự đặc biệt, nhưng cho phép dấu tiếng Việt và khoảng trắng)
-if (empty($full_name)) {
-    $errors['full_name'] = 'Họ và Tên không được để trống.';
-} elseif (!preg_match("/^[\p{L}\s]+$/u", $full_name)) {  // Biểu thức cho phép dấu tiếng Việt
-    $errors['full_name'] = 'Họ và Tên chỉ được phép chứa chữ cái và khoảng trắng.';
-}
+    // Kiểm tra trường "Họ và Tên" (Không có số và ký tự đặc biệt, nhưng cho phép dấu tiếng Việt và khoảng trắng)
+    if (empty($full_name)) {
+        $errors['full_name'] = 'Họ và Tên không được để trống.';
+    } elseif (!preg_match("/^[\p{L}\s]+$/u", $full_name)) {  // Biểu thức cho phép dấu tiếng Việt
+        $errors['full_name'] = 'Họ và Tên chỉ được phép chứa chữ cái và khoảng trắng.';
+    }
 
 
     // Kiểm tra username và email trong cơ sở dữ liệu
@@ -46,6 +51,15 @@ if (empty($full_name)) {
         if ($existingUser['email'] === $email) {
             $errors['email'] = 'Email đã được sử dụng.';
         }
+    }
+    // Kiểm tra trường "Ngày Sinh"
+    if (empty($dob)) {
+        $errors['dob'] = 'Ngày sinh không được để trống.';
+    }
+
+    // Kiểm tra trường "Giới Tính"
+    if (empty($gender)) {
+        $errors['gender'] = 'Giới tính không được để trống.';
     }
 
     // Kiểm tra mật khẩu và xác nhận mật khẩu
@@ -82,14 +96,16 @@ if (empty($full_name)) {
             $mail->send();
 
             // Lưu thông tin người dùng vào session
-// Lưu thông tin người dùng vào session
-session_start();
-$_SESSION["otp"] = $otp;
-$_SESSION["username"] = $username;
-$_SESSION["email"] = $email;
-$_SESSION["password"] = $password;
-$_SESSION["full_name"] = $full_name;  // Lưu full_name vào session
-$_SESSION["otp_time"] = time(); // Lưu thời gian gửi OTP
+            // Lưu thông tin người dùng vào session
+            session_start();
+            $_SESSION["otp"] = $otp;
+            $_SESSION["username"] = $username;
+            $_SESSION["email"] = $email;
+            $_SESSION["password"] = $password;
+            $_SESSION["full_name"] = $full_name;
+            $_SESSION["dob"] = $dob;
+            $_SESSION["gender"] = $gender; // Lưu full_name vào session
+            $_SESSION["otp_time"] = time(); // Lưu thời gian gửi OTP
 
 
             // Chuyển hướng đến trang xác nhận OTP
@@ -108,6 +124,7 @@ $conn = null;
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -118,6 +135,7 @@ $conn = null;
         @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
     </style>
 </head>
+
 <body class="bg-gray-100 font-roboto">
     <header class="bg-black text-white py-4">
         <div class="container mx-auto px-5 flex justify-between items-center">
@@ -134,96 +152,109 @@ $conn = null;
         </div>
     </header>
 
-    <main class="container mx-auto px-10 py-10">
-        <div class="login-container max-w-md mx-auto bg-white p-8 rounded-md shadow-lg overflow-hidden border border-gray-200">
+    <main class="container mx-auto px-5 py-5">
+        <div class="login-container max-w-2xl mx-auto bg-white p-6 rounded-md shadow-lg overflow-hidden border border-gray-200">
             <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Đăng Ký</h2>
-            <form action="register.php" method="POST">
-    <!-- Username -->
-    <div class="mb-4">
-        <label for="username" class="block text-gray-700 font-medium mb-2">Tên Đăng Nhập:</label>
-        <input 
-            type="text" 
-            id="username" 
-            name="username" 
-            value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" 
-            class="border border-gray-300 px-4 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['username'] ? 'border-red-500' : '' ?>" 
-            required
-        >
-        <?php if ($errors['username']): ?>
-            <p class="text-red-500 text-sm mt-1"><?= $errors['username'] ?></p>
-        <?php endif; ?>
-    </div>
-<!-- Full Name -->
-<div class="mb-4">
-    <label for="full_name" class="block text-gray-700 font-medium mb-2">Họ và Tên:</label>
-    <input 
-        type="text" 
-        id="full_name" 
-        name="full_name" 
-        value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>" 
-        class="border border-gray-300 px-4 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['full_name'] ? 'border-red-500' : '' ?>" 
-        required
-    >
-    <?php if ($errors['full_name']): ?>
-        <p class="text-red-500 text-sm mt-1"><?= $errors['full_name'] ?></p>
-    <?php endif; ?>
-</div>
+            <form action="register.php" method="POST" class="space-y-4"> <!-- Giảm khoảng cách giữa các hàng -->
+                <div class="mb-3"> <!-- Giảm margin-bottom -->
+                    <label for="username" class="block text-gray-700 font-medium mb-1">Tên Đăng Nhập:</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
+                        class="border border-gray-300 px-3 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['username'] ? 'border-red-500' : '' ?>"
+                        required>
+                    <?php if ($errors['username']): ?>
+                        <p class="text-red-500 text-sm mt-1"><?= $errors['username'] ?></p>
+                    <?php endif; ?>
+                </div>
 
-    <!-- Email -->
-    <div class="mb-4">
-        <label for="email" class="block text-gray-700 font-medium mb-2">Email:</label>
-        <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" 
-            class="border border-gray-300 px-4 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['email'] ? 'border-red-500' : '' ?>" 
-            required
-        >
-        <?php if ($errors['email']): ?>
-            <p class="text-red-500 text-sm mt-1"><?= $errors['email'] ?></p>
-        <?php endif; ?>
-    </div>
+                <div class="mb-3"> <!-- Giảm margin-bottom -->
+                    <label for="full_name" class="block text-gray-700 font-medium mb-1">Họ và Tên:</label>
+                    <input
+                        type="text"
+                        id="full_name"
+                        name="full_name"
+                        value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>"
+                        class="border border-gray-300 px-3 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['full_name'] ? 'border-red-500' : '' ?>"
+                        required>
+                    <?php if ($errors['full_name']): ?>
+                        <p class="text-red-500 text-sm mt-1"><?= $errors['full_name'] ?></p>
+                    <?php endif; ?>
+                </div>
 
-    <!-- Password -->
-    <div class="mb-4">
-        <label for="password" class="block text-gray-700 font-medium mb-2">Mật Khẩu:</label>
-        <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            class="border border-gray-300 px-4 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['password'] ? 'border-red-500' : '' ?>" 
-            required
-        >
-        <?php if ($errors['password']): ?>
-            <p class="text-red-500 text-sm mt-1"><?= $errors['password'] ?></p>
-        <?php endif; ?>
-    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3"> <!-- Giảm khoảng cách giữa các ô -->
+                    <div class="mb-3">
+                        <label for="dob" class="block text-gray-700 font-medium mb-1">Ngày Sinh:</label>
+                        <input type="date" id="dob" name="dob" value="<?= htmlspecialchars($_POST['dob'] ?? '') ?>" class="border border-gray-300 px-3 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['dob'] ? 'border-red-500' : '' ?>" required>
+                        <?php if ($errors['dob']): ?>
+                            <p class="text-red-500 text-sm mt-1"><?= $errors['dob'] ?></p>
+                        <?php endif; ?>
+                    </div>
 
-    <!-- Confirm Password -->
-    <div class="mb-6">
-        <label for="confirm_password" class="block text-gray-700 font-medium mb-2">Xác Nhận Mật Khẩu:</label>
-        <input 
-            type="password" 
-            id="confirm_password" 
-            name="confirm_password" 
-            class="border border-gray-300 px-4 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['confirm_password'] ? 'border-red-500' : '' ?>" 
-            required
-        >
-        <?php if ($errors['confirm_password']): ?>
-            <p class="text-red-500 text-sm mt-1"><?= $errors['confirm_password'] ?></p>
-        <?php endif; ?>
-    </div>
+                    <div class="mb-3">
+                        <label for="gender" class="block text-gray-700 font-medium mb-1">Giới Tính:</label>
+                        <select id="gender" name="gender" class="border border-gray-300 px-3 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['gender'] ? 'border-red-500' : '' ?>" required>
+                            <option value="Nam" <?= ($_POST['gender'] ?? '') == 'Nam' ? 'selected' : '' ?>>Nam</option>
+                            <option value="Nữ" <?= ($_POST['gender'] ?? '') == 'Nữ' ? 'selected' : '' ?>>Nữ</option>
+                        </select>
+                        <?php if ($errors['gender']): ?>
+                            <p class="text-red-500 text-sm mt-1"><?= $errors['gender'] ?></p>
+                        <?php endif; ?>
+                    </div>
 
-    <button type="submit" class="bg-black hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-md w-full transition duration-300">Đăng Ký</button>
-</form>
+                </div>
 
+                <div class="mb-3"> <!-- Giảm margin-bottom -->
+                    <label for="email" class="block text-gray-700 font-medium mb-1">Email:</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                        class="border border-gray-300 px-3 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['email'] ? 'border-red-500' : '' ?>"
+                        required>
+                    <?php if ($errors['email']): ?>
+                        <p class="text-red-500 text-sm mt-1"><?= $errors['email'] ?></p>
+                    <?php endif; ?>
+                </div>
 
+                <div class="mb-3"> <!-- Giảm margin-bottom -->
+                    <label for="password" class="block text-gray-700 font-medium mb-1">Mật Khẩu:</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="border border-gray-300 px-3 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['password'] ? 'border-red-500' : '' ?>"
+                        required>
+                    <?php if ($errors['password']): ?>
+                        <p class="text-red-500 text-sm mt-1"><?= $errors['password'] ?></p>
+                    <?php endif; ?>
+                </div>
 
-            <div class="login-lable mt-6 text-center text-gray-600">
+                <div class="mb-6"> <!-- Giảm margin-bottom -->
+                    <label for="confirm_password" class="block text-gray-700 font-medium mb-1">Xác Nhận Mật Khẩu:</label>
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        class="border border-gray-300 px-3 py-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 <?= $errors['confirm_password'] ? 'border-red-500' : '' ?>"
+                        required>
+                    <?php if ($errors['confirm_password']): ?>
+                        <p class="text-red-500 text-sm mt-1"><?= $errors['confirm_password'] ?></p>
+                    <?php endif; ?>
+                </div>
+
+                <button type="submit" class="bg-black hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-md w-full transition duration-300">Đăng Ký</button>
+            </form>
+
+            <div class="login-lable mt-4 text-center text-gray-600">
                 <a href="login.php" class="hover:text-gray-900">Đã có tài khoản? Đăng Nhập ngay</a>
             </div>
         </div>
     </main>
+
 </body>
+
 </html>

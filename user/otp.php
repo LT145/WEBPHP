@@ -95,6 +95,10 @@ $username = $_SESSION["username"];
 $email = $_SESSION["email"];
 $password = $_SESSION["password"];
 $full_name = $_SESSION["full_name"];  // Lấy full_name từ session
+$role = "user";
+$dob = $_SESSION["dob"];  // Lấy full_name từ session
+$gender = $_SESSION["gender"];
+$imgavt = "https://i.ibb.co/fX09cRC/image.png";
 
 // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
@@ -103,11 +107,15 @@ try {
     include '../asset/connect.php'; // Kết nối đến CSDL
 
     // Lưu thông tin người dùng vào CSDL (thêm full_name)
-    $stmt = $conn->prepare("INSERT INTO user (username, email, password, fullname) VALUES (:username, :email, :password, :fullname)");
+    $stmt = $conn->prepare("INSERT INTO user (username, email, password, fullname, role, dob, gender, imgavt) VALUES (:username, :email, :password, :fullname, :role, :dob, :gender, :imgavt)");
     $stmt->bindParam(':username', $username);
     $stmt->bindParam(':email', $email);
     $stmt->bindParam(':password', $hashedPassword);
     $stmt->bindParam(':fullname', $full_name);  // Thêm bindParam cho full_name
+    $stmt->bindParam(':role', $role);
+    $stmt->bindParam(':dob', $dob);  // Thêm bindParam cho full_name
+    $stmt->bindParam(':gender', $gender);
+    $stmt->bindParam(':imgavt', $imgavt);
     $stmt->execute();
 
     // Thông báo thành công
@@ -118,7 +126,9 @@ try {
     unset($_SESSION["username"]);
     unset($_SESSION["email"]);
     unset($_SESSION["password"]);
-    unset($_SESSION["full_name"]);  // Xóa full_name khỏi session
+    unset($_SESSION["full_name"]);
+    unset($_SESSION["dob"]);
+    unset($_SESSION["gender"]);  
 
     // Chuyển hướng đến trang đăng nhập
     header("Location: login.php");
