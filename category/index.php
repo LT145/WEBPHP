@@ -25,13 +25,12 @@ try {
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="flex flex-col min-h-screen"> <!-- Thêm flex và min-h-screen vào thẻ body -->
     <?php
     include('../component/header.php'); // Điều chỉnh đường dẫn đến header.php
     ?>
 
-
-    <main>
+    <main class="flex-grow"> <!-- Thêm flex-grow vào thẻ main để nội dung chiếm không gian còn lại -->
         <div class="container mx-auto max-w-4xl">
             <h1 class="text-4xl text-center font-bold my-6">Danh Sách Các Công Thức Pha Chế</h1>
             <div class="grid grid-cols-1 gap-x-3 gap-y-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
@@ -50,11 +49,10 @@ try {
                 <?php endif; ?>
             </div>
         </div>
-
     </main>
 
     <?php
-    include '../component/footer.php';
+    include '../component/footer.php'; // Đảm bảo đường dẫn footer đúng
     ?>
 </body>
 

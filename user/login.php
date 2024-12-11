@@ -7,56 +7,52 @@ $errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Lấy thông tin người dùng từ form
-    $usernameOrEmail = trim($_POST["username"]); // Người dùng có thể nhập username hoặc email
+    $usernameOrEmail = trim($_POST["username"]);
     $password = trim($_POST["password"]);
 
-    // Kiểm tra nếu có thông tin đăng nhập
     if (empty($usernameOrEmail) || empty($password)) {
         $errors[] = 'Vui lòng điền đầy đủ thông tin đăng nhập.';
     } else {
         // Truy vấn cơ sở dữ liệu để kiểm tra người dùng
-        // Kiểm tra xem người dùng nhập vào username hay email
         $stmt = $conn->prepare("SELECT * FROM user WHERE username = :usernameOrEmail OR email = :usernameOrEmail");
         $stmt->bindParam(':usernameOrEmail', $usernameOrEmail);
         $stmt->execute();
         $user = $stmt->fetch();
 
         if ($user) {
-            // Debug: Kiểm tra mật khẩu và thông tin người dùng
-            // Bạn có thể ghi lại mật khẩu trong cơ sở dữ liệu để xem có vấn đề gì không
-             error_log("Mật khẩu trong cơ sở dữ liệu: " . $user['password']); 
+            // Kiểm tra trạng thái tài khoản
+            if ($user['status'] === 'locked') {
+                $errors[] = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với admin để được hỗ trợ.';
+            } else {
+                // Kiểm tra mật khẩu
+                if (password_verify($password, $user['password'])) {
+                    // Đăng nhập thành công
+                    $_SESSION['user_id'] = $user['user_id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['dob'] = $user['dob'];
+                    $_SESSION['gender'] = $user['gender'];
+                    $_SESSION['imgavt'] = $user['imgavt'];
+                    $_SESSION['role'] = $user['role'];
+                    $_SESSION['fullname'] = $user['fullname'];
 
-            // Kiểm tra mật khẩu
-           // Kiểm tra mật khẩu
-if (password_verify($password, $user['password'])) {
-    // Đăng nhập thành công, lưu thông tin người dùng vào session
-    $_SESSION['user_id'] = $user['user_id'];
-    $_SESSION['username'] = $user['username'];
-    $_SESSION['email'] = $user['email'];
-    $_SESSION['dob'] = $user['dob'];
-    $_SESSION['gender'] = $user['gender'];
-    $_SESSION['imgavt'] = $user['imgavt'];
-    $_SESSION['role'] = $user['role'];
-    $_SESSION['fullname'] = $user['fullname'];
-    
-    // Lấy họ tên và cắt tên (Lấy phần tên cuối)
-    $full_name = $user['fullname'];
-    $name_parts = explode(' ', $full_name); // Tách tên
-    $_SESSION['first_name'] = end($name_parts); // Lấy phần tên cuối (ví dụ: "Lộc")
+                    // Lấy tên cuối
+                    $full_name = $user['fullname'];
+                    $name_parts = explode(' ', $full_name);
+                    $_SESSION['first_name'] = end($name_parts);
 
-    header("Location: /index.php"); // Chuyển hướng về trang chính
-    exit();
-} else {
-    // Mật khẩu không đúng
-    $errors[] = 'Mật khẩu không đúng.';
-}
-
+                    header("Location: /index.php");
+                    exit();
+                } else {
+                    $errors[] = 'Mật khẩu không đúng.';
+                }
+            }
         } else {
             $errors[] = 'Tên đăng nhập hoặc email không tồn tại.';
         }
-        
     }
 }
+
 
 $conn = null;
 

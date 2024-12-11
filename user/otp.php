@@ -99,6 +99,7 @@ $role = "user";
 $dob = $_SESSION["dob"];  // Lấy full_name từ session
 $gender = $_SESSION["gender"];
 $imgavt = "https://i.ibb.co/fX09cRC/image.png";
+$status = "active ";
 
 // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
@@ -107,7 +108,7 @@ try {
     include '../asset/connect.php'; // Kết nối đến CSDL
 
     // Lưu thông tin người dùng vào CSDL (thêm full_name)
-    $stmt = $conn->prepare("INSERT INTO user (username, email, password, fullname, role, dob, gender, imgavt) VALUES (:username, :email, :password, :fullname, :role, :dob, :gender, :imgavt)");
+    $stmt = $conn->prepare("INSERT INTO user (username, email, password, fullname, role, dob, gender, imgavt, status) VALUES (:username, :email, :password, :fullname, :role, :dob, :gender, :imgavt, :status)");
     $stmt->bindParam(':username', $username);
     $stmt->bindParam(':email', $email);
     $stmt->bindParam(':password', $hashedPassword);
@@ -116,6 +117,7 @@ try {
     $stmt->bindParam(':dob', $dob);  // Thêm bindParam cho full_name
     $stmt->bindParam(':gender', $gender);
     $stmt->bindParam(':imgavt', $imgavt);
+    $stmt->bindParam(':status', $status);
     $stmt->execute();
 
     // Thông báo thành công
