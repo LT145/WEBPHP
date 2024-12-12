@@ -115,6 +115,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id']) && isset
 <body class="bg-gray-100">
     <?php include('../component/header.php'); ?>
 
+    <!-- Kiểm tra nếu role là admin -->
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+        <div class="absolute top-0 left-0 p-4">
+            <a href="/admin" class="px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600">
+                Quay lại
+            </a>
+        </div>
+    <?php endif; ?>
+
     <main class="container mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:px-8">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden relative">
             <div class="p-6">
@@ -132,7 +141,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id']) && isset
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-0 ">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
                 <div class="overflow-hidden">
                     <img src="<?= htmlspecialchars($product['img']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="w-full h-full object-cover md:h-auto rounded-br-lg drop-shadow-2xl">
                     <div class="absolute bottom-0 right-0 w-24 h-24 bg-white rounded-tl-full transform rotate-45 -translate-x-1/2 translate-y-1/2"></div>
@@ -162,18 +171,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id']) && isset
                     <div class="cach-lam-box mb-2">
                         <h2 class="text-xl font-semibold text-gray-700 text-justify">Cách Làm:</h2>
                         <?php
-                        // Tách các bước cách làm bằng ký tự xuống dòng
                         $cachlam_steps = explode("\n", $product['cachlam']);
-
-                        // Hiển thị từng bước với số thứ tự và in đậm
                         foreach ($cachlam_steps as $index => $step):
                             $step = trim($step);
-                            // Kiểm tra xem bước có chứa chữ "bước" hay không
                             if (preg_match('/bước\s*\d+:\s*/i', $step)) {
-                                // Nếu có, thay thế bằng thẻ span in đậm
                                 $step = preg_replace('/bước\s*\d+:\s*/i', '<span class="font-bold">Bước ' . ($index + 1) . ':</span> ', $step);
                             } else {
-                                // Nếu không, thêm thẻ span in đậm vào đầu bước
                                 $step = '<span class="font-bold">Bước ' . ($index + 1) . ':</span> ' . $step;
                             }
                             if (!empty($step)):
@@ -188,22 +191,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id']) && isset
             </div>
         </div>
 
-        <div class="related-products mt-8">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Sản phẩm cùng loại</h2>
-            <div class="swiper">
-                <div class="swiper-wrapper">
-                    <?php foreach ($related_products as $related_product): ?>
-                        <div class="swiper-slide">
-                            <a href="?id=<?= htmlspecialchars($related_product['id']) ?>">
-                                <img src="<?= htmlspecialchars($related_product['img']) ?>" alt="<?= htmlspecialchars($related_product['name']) ?>" class="w-[300px] h-[200px] object-cover mx-auto rounded-lg">
-                                <p class="text-center text-gray-700 mt-2 mb-8"><?= htmlspecialchars($related_product['name']) ?></p>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <div class="swiper-pagination"></div>
+        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+            <div class="mt-4 flex justify-end">
+                <a href="/edit-product.php?id=<?= htmlspecialchars($product['id']) ?>" class="px-4 py-2 bg-green-500 text-white rounded shadow hover:bg-green-600">
+                    Sửa sản phẩm
+                </a>
             </div>
-        </div>
+        <?php endif; ?>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
@@ -226,34 +220,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id']) && isset
                 },
             },
         });
-
-        const favoriteBtn = document.getElementById('favoriteBtn');
-        if (favoriteBtn) {
-            favoriteBtn.addEventListener('click', function() {
-                const productId = this.dataset.productId;
-                const isFavorited = this.classList.contains('text-red-500');
-                fetch('', { 
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `id_product=${productId}`
-                    })
-                    .then(response => response.text())
-                    .then(result => {
-                        if (result === 'added') {
-                            this.classList.add('text-red-500');
-                            this.classList.remove('text-gray-400', 'hover:text-red-500');
-                        } else if (result === 'removed') {
-                            this.classList.remove('text-red-500');
-                            this.classList.add('text-gray-400', 'hover:text-red-500');
-                        } else {
-                            console.error('Lỗi:', result);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Lỗi:', error);
-                    });
-            });
-        }
     </script>
 
     <?php include '../component/footer.php'; ?>

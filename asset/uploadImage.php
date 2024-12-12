@@ -61,15 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['image'])) {
 
         // Hiển thị kết quả
         if ($imageUrl && filter_var($imageUrl, FILTER_VALIDATE_URL)) {
-            echo "Ảnh đã được upload thành công! URL: <a href='$imageUrl' target='_blank'>$imageUrl</a>";
         } else {
-            echo "Đã xảy ra lỗi khi upload ảnh. Lỗi: " . $imageUrl;
         }
     } else {
         // Nếu có lỗi khi tải ảnh lên
-        echo "Lỗi khi tải ảnh lên. Mã lỗi: " . $image['error'];
     }
 } else {
-    echo "Không có tệp ảnh nào được upload.";
 }
 ?>

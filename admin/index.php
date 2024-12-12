@@ -80,7 +80,7 @@
         <h2 class="text-2xl font-semibold mb-4 flex items-center justify-center">
           <i class="fa-solid fa-newspaper mr-2 text-gray-500"></i> Quản lý Bài Viết
         </h2>
-        <a href="posts.php" class="button bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg text-lg">
+        <a href="productmanager.php" class="button bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg text-lg">
           Xem danh sách bài viết
         </a>
       </div>
